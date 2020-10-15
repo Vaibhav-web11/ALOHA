@@ -1,0 +1,73 @@
+import numpy as np
+import sympy as sym
+def grad(p,q):
+    x, y = sym.symbols('x, y', real=True)
+    
+    #function that you have to minimize
+    
+    z=((1-x)**2) + ((y-(x**2))**2)
+    val=z.evalf(subs={x: p,y:q})
+    grad=[]
+    for i in [x,y]:
+        v=sym.diff(z,i)
+        v=v.evalf(subs={x: p,y:q})
+        grad.append(v)
+    p=np.array(grad)
+    return p,val,z
+
+initial_point=np.array(input('enter the initial point with space seprated= ').split(' '))
+initial_point=initial_point.astype(float)
+initial_point
+eta=float(input('enter the step size= '))
+count=0
+iteration=int(input('enter the iteration that you want= '))
+i=0
+x_c=[]
+y_c=[]
+z_c=[]
+while i<iteration:
+    p=initial_point[0]
+    q=initial_point[1]
+    c,val,z=grad(p,q)
+    c=c.astype(float)
+    x_c.append(p)
+    y_c.append(q)
+    z_c.append(val)
+    from numpy import linalg as LA
+    n=LA.norm(c)
+    count=count+1
+    b=str(count)
+    print('function value at'+ b+ 'iteration= ',val)
+    if n>0.01:
+        initial_point=initial_point-eta*c
+        i=i+1
+    else:
+        i=iteration
+            
+    
+    
+
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+x=np.linspace(-8,10,50)
+y=np.linspace(-10,10,50)
+x,y=np.meshgrid(x,y)
+z=((1-x)**2) + ((y-(x**2))**2)
+fig=plt.figure(figsize=(15,15))
+plt.subplot(1,2,1)
+ax = fig.add_subplot(1, 2, 1, projection='3d')
+ax.plot_surface(x,y,z,alpha=.5)
+ax.plot(x_c, y_c, z_c, c='r', marker='.')
+ax.set_title('progression of steepest descent')
+ax.set_xlabel('X',color='red')
+ax.set_ylabel('Y',color='red')
+ax.set_zlabel('f(x,y)',color='red')
+ax = fig.add_subplot(1, 2, 2, projection='3d')
+ax.contour(x,y,z,50,alpha=1)
+ax.plot(x_c, y_c, z_c, c='r', marker='.')
+ax.set_title('level sets')
+ax.set_xlabel('X',color='red')
+ax.set_ylabel('Y',color='red')
+ax.set_zlabel('f(x,y)',color='red')
+plt.show
+        
