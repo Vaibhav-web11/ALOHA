@@ -1,0 +1,105 @@
+import numpy as np
+import sympy as sym
+from sympy import solve, Poly, Eq, Function, exp,real_roots,nroots,ground_roots
+def grad(p,q):
+    c1=0.01
+    c2=0.4
+    
+    x, y,r = sym.symbols('x, y,r', real=True) #initilize the variablle the we use in function z and function g
+    
+   # z=x**2 + y**2
+    z=(x**2)/10 +y**2                  #function that you have to minimize
+    #z=((1-x)**2) + ((y-(x**2))**2)
+    
+    val=z.evalf(subs={x: p,y:q})        #evaluate the function value at points p,q
+    
+    gradient=[]
+    for i in [x,y]:
+        temp=sym.diff(z,i)
+        temp=temp.evalf(subs={x: p,y:q})     # calculate the gradient at point p,q
+        gradient.append(temp)
+    grd=np.array(gradient)
+    
+    temp1=sym.diff(z,x)
+    temp2=sym.diff(z,y)
+    s=(x-r*temp1)                   # construct function g by substituting x=x-r*grad ,y=y-r*grad
+    t=(y-r*temp2)
+    g=z.subs({x: s,y:t})
+   
+    o=sym.diff(g,r)
+    o=o.subs({x: p,y:q})        #differentiate function g
+    t=sym.simplify(o)
+    temp4= Poly(t, r)
+    list1=np.linspace(0,0.9,800)
+    list1=list1[1:]
+    if t!=0:
+        for i in list1:
+            fi_alpha=g.evalf(subs={x: p,y:q,r:i})
+            fi_zero=g.evalf(subs={x: p,y:q,r:0})
+            dif_fi_zero=o.evalf(subs={r:0})            
+            dif_fi_alpha=o.evalf(subs={r:i})
+            if (fi_alpha<(fi_zero+c1*dif_fi_zero)) and (dif_fi_alpha>(c2*dif_fi_zero)): #wolfe condition
+                eta=i
+    else:
+        eta=0
+
+    return grd,val,eta        #return the gradient,function value , optimum eta
+
+initial_point=np.array(input('enter the initial point with space seprated= ').split(' ')) # enter intial value of x,y
+initial_point=initial_point.astype(float)
+xy=initial_point
+
+count=0
+iteration=int(input('enter the iteration that you want= '))
+i=0
+x_c=[]
+y_c=[]
+z_c=[]
+while i<iteration:
+    p=initial_point[0]
+    q=initial_point[1]
+    grd,val,eta=grad(p,q)
+    grd=grd.astype(float)
+    x_c.append(p)
+    y_c.append(q)
+    z_c.append(val)
+    from numpy import linalg as LA
+    n=LA.norm(grd)                           #compute norm of gradient
+    count=count+1
+    var1=str(count)
+    var2=str(p)
+    var3=str(q)
+    print('function value at'+ var1 + 'iteration at point ('+var2+','+var3+')= ',val)
+    
+    if n>0.01:
+        initial_point=initial_point-eta*grd   #stepest decent and stopped if norm ofgradient at any point is lees then 0.001
+        i=i+1
+    else:
+        i=iteration
+            
+  import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+x=np.linspace(-xy[0]-5,xy[0]+5,100)
+y=np.linspace(-xy[1]-5,xy[1]+5,100)
+x,y=np.meshgrid(x,y)
+# z=(x**2)/10 +y**2
+# z=x**2 + y**2
+z=((1-x)**2) + ((y-(x**2))**2)
+fig=plt.figure(figsize=(15,15))
+plt.subplot(1,2,1)
+ax = fig.add_subplot(1, 2, 1, projection='3d')
+ax.plot_surface(x,y,z,alpha=.5)
+ax.plot(x_c, y_c, z_c, c='r', marker='.')
+ax.set_title('progression of optimum step size')
+ax.set_xlabel('X',color='red')
+ax.set_ylabel('Y',color='red')
+ax.set_zlabel('f(x,y)',color='red')
+ax = fig.add_subplot(1, 2, 2, projection='3d')
+ax.contour(x,y,z,30,alpha=1)
+ax.plot(x_c, y_c, z_c, c='r', marker='.')
+ax.set_title('level sets')
+ax.set_xlabel('X',color='red')
+ax.set_ylabel('Y',color='red')
+ax.set_zlabel('f(x,y)',color='red')
+plt.show
+        
