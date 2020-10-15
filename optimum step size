@@ -1,0 +1,103 @@
+import numpy as np
+import sympy as sym
+from sympy import solve, Poly, Eq, Function, exp,real_roots,nroots,ground_roots
+def grad(p,q):
+    x, y,r = sym.symbols('x, y,r', real=True)
+    
+    #function that you have to minimize
+    #z=x**2 + y**2
+    #z=(x**2)/10 +y**2
+    z=((1-x)**2) + ((y-(x**2))**2)
+    val=z.evalf(subs={x: p,y:q})
+    grad=[]
+    for i in [x,y]:
+        v=sym.diff(z,i)
+        v=v.evalf(subs={x: p,y:q})
+        grad.append(v)
+    gr=np.array(grad)
+    a=sym.diff(z,x)
+    b=sym.diff(z,y)
+    s=(x-r*a)
+    t=(y-r*b)
+    g=z.subs({x: s,y:t})
+    o=sym.diff(g,r)
+    o=o.subs({x: p,y:q})
+    t=sym.simplify(o)
+    if t!=0:
+        d=nroots(t)
+        v1=[]
+        v2=[]
+        for i in d:
+            if len(str(i))<20:
+                k=g.evalf(subs={r:i,x: p,y:q})
+                v1.append(k)
+                v2.append(i)
+        ind=v1.index(min(v1))
+        eta=d[ind]
+#         else:
+#             eta=.001
+
+    else:
+        eta=0
+
+    
+    return gr,val,eta
+
+initial_point=np.array(input('enter the initial point with space seprated= ').split(' '))
+initial_point=initial_point.astype(float)
+initial_point
+count=0
+iteration=int(input('enter the iteration that you want= '))
+i=0
+x_c=[]
+y_c=[]
+z_c=[]
+while i<iteration:
+    p=initial_point[0]
+    q=initial_point[1]
+    c,val,eta=grad(p,q)
+    c=c.astype(float)
+    x_c.append(p)
+    y_c.append(q)
+    z_c.append(val)
+    from numpy import linalg as LA
+    n=LA.norm(c)
+    count=count+1
+    var2=str(count)
+    var3=str(p)
+    var4=str(q)
+    print('function value at'+ var2 + 'iteration at point ('+var3+','+var4+')= ',val)
+    if n>0.01:
+        initial_point=initial_point-eta*c
+        i=i+1
+    else:
+        i=iteration
+var=int(max(x_c))
+            
+    
+    import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+x=np.linspace(-15,20,100)
+y=np.linspace(-20,20,100)
+x,y=np.meshgrid(x,y)
+# z=(x**2)/10 +y**2
+# z=x**2 + y**2
+z=((1-x)**2) + ((y-(x**2))**2)
+fig=plt.figure(figsize=(15,15))
+plt.subplot(1,2,1)
+ax = fig.add_subplot(1, 2, 1, projection='3d')
+ax.plot_surface(x,y,z,alpha=.5)
+ax.plot(x_c, y_c, z_c, c='r', marker='.')
+ax.set_title('progression of optimum step size')
+ax.set_xlabel('X',color='red')
+ax.set_ylabel('Y',color='red')
+ax.set_zlabel('f(x,y)',color='red')
+ax = fig.add_subplot(1, 2, 2, projection='3d')
+ax.contour(x,y,z,50,alpha=1)
+ax.plot(x_c, y_c, z_c, c='r', marker='.')
+ax.set_title('level sets')
+ax.set_xlabel('X',color='red')
+ax.set_ylabel('Y',color='red')
+ax.set_zlabel('f(x,y)',color='red')
+plt.show
+        
